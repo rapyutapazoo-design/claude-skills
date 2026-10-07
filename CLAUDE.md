@@ -21,6 +21,8 @@ git reset --hard
 gh pr create
 ```
 
+※ auto-flow 実行中は [6] safe-push と [7] ゲート合格後のマージ（ガード付き）も正規経路。
+
 読み取り専用のgit操作は制限なし（`git status`、`git log`、`git diff` など）。
 
 ユーザーが直接実行を求めた場合は、`/git-workflow` を使うよう案内すること。
@@ -100,4 +102,25 @@ git-workflow/
 ├── scripts/analyze_diff.py         # git diff を構造化JSONで出力
 ├── references/coding_standards.md  # プロジェクトのコーディング規約
 └── assets/review_template.md       # レビュー結果の出力テンプレート
+```
+
+---
+
+### auto-flow
+
+**場所**: `auto-flow/`
+
+「オートフロー」「auto-flow」「自律実行して」などをトリガーに起動するワークフロー・オーケストレーター。検討→計画→実装→独立レビュー→セキュリティチェック→マージ判定ゲートを確認なしで自律進行し、全ゲート合格時のみ main へ自動マージする。不合格なら PR止め。
+
+```
+auto-flow/
+├── SKILL.md                  # スキル定義・フロー手順
+└── hooks/
+    ├── af_common.py          # 共通処理
+    ├── af_gate.sh            # Git フックの入口（git_guard.py を呼ぶ）
+    ├── af_guard.py           # PreToolUse ガード（frontmatter で登録）
+    ├── git_guard.py          # Git フック用ガード
+    ├── install_guards.py     # repo ごとのガード設置・撤去
+    ├── prompt_token.py       # UserPromptSubmit / UserPromptExpansion 用トークン処理
+    └── tests/                # unittest 一式
 ```

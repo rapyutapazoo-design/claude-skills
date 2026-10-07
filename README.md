@@ -64,6 +64,22 @@ Claude Code用のカスタムスキル集です。スキルはフォルダ単位
 
 ---
 
+### 🚀 [`auto-flow/`](./auto-flow/)
+
+検討→計画→実装→独立レビュー→セキュリティチェック→マージ判定ゲートを確認なしで自律的に進め、全ゲートに合格したときだけ main へ自動マージするワークフロー・オーケストレーター。
+
+- 動的モデル選択と短縮ルート
+- G1〜G8 のマージ判定ゲート（不合格なら PR止め）
+- 2層フック関所
+- オプション `--research` / `--economy` / `--fable` / `--no-merge`、「auto-flow 再開」で中断地点から再開
+- 成果物は `.auto-flow/<実行ID>/` に保存
+
+**起動トリガー:** 「オートフロー」「auto-flow」「自律実行して」「自動で最後まで進めて」「全自動で進めて」、`/auto-flow <課題>`
+
+※ auto-flow への言及・質問・検討依頼・改善依頼では起動しません。
+
+---
+
 ## スキルの適用方法
 
 ### グローバル適用（全プロジェクトで使用）
@@ -76,6 +92,64 @@ cp -r <スキルフォルダ> ~/.claude/skills/
 ### プロジェクト単位で適用
 
 スキルフォルダをプロジェクトの `.claude/skills/` に配置してください。
+
+### auto-flow のセットアップ
+
+- 前提: `python3` と `git`（PR を作る場合は `gh` も）
+- 依存スキルの `researcher` / `consultant-mode` / `plan-creator` / `safe-push` も `~/.claude/skills/` に配置してください。
+- **配置は必ず `~/.claude/skills/auto-flow/`** です（フックのパスが固定されているため、プロジェクト単位では配置できません）。
+
+```bash
+mkdir -p ~/.claude/skills
+cp -r auto-flow ~/.claude/skills/
+```
+
+`~/.claude/settings.json` の `UserPromptSubmit` と `UserPromptExpansion` に、次のフックを登録してください（既存の hooks がある場合はマージします）。未設定だと常に PR止めになります。
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 10,
+            "command": "f=\"$HOME/.claude/skills/auto-flow/hooks/prompt_token.py\"; [ -f \"$f\" ] || exit 0; command -v python3 >/dev/null 2>&1 || exit 0; python3 \"$f\" >/dev/null 2>&1; exit 0"
+          }
+        ]
+      }
+    ],
+    "UserPromptExpansion": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 10,
+            "command": "f=\"$HOME/.claude/skills/auto-flow/hooks/prompt_token.py\"; [ -f \"$f\" ] || exit 0; command -v python3 >/dev/null 2>&1 || exit 0; python3 \"$f\" >/dev/null 2>&1; exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+- `af_guard.py` は SKILL.md の frontmatter で自動登録されます。
+- Git フックは `install_guards.py` が repo ごとに設置します。
+- **撤去の前に、ガードを設置した全 repo で次を実行してください。**
+
+```bash
+python3 ~/.claude/skills/auto-flow/hooks/install_guards.py uninstall --repo <repo>
+```
+
+### テストの実行
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s auto-flow/hooks/tests -v
+```
+
+テストでは HOME と git 設定が隔離されます。
 
 ---
 
@@ -92,6 +166,14 @@ cp -r <スキルフォルダ> ~/.claude/skills/
     ↓
 安全確認してプッシュ（safe-push）
 ```
+
+全自動ルート（auto-flow）:
+
+```
+[1]調査(任意) → [2]検討 → [3]計画 → [4]実装 → [5]レビュー ⇄ [5']自動修正 → [6]チェック&push → [7]ゲート → [8]完了報告
+```
+
+小規模な課題では [2][3] を省略します。全ゲートに合格したときだけ main へ自動マージし、不合格なら PR止めになります。
 
 ---
 
