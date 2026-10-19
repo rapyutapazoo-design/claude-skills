@@ -34,7 +34,7 @@ sources/    … 原文。PDF とその .txt、HTML は .md。要約ファイル�
 extracts.json … 抜き書き（止めたあとに書く・下の「抜き書きのページ」）
 report.html … 抜き書きのページ（report.py が作る）
 watch.tsv   … 見張る先（見張りのモードを使ったときだけ）
-watch/      … 見張りの結果。<日付>.md
+watch/      … 見張りの結果。<日付-時刻>.md
 ```
 
 ## 検索役のサブエージェント
@@ -46,6 +46,7 @@ watch/      … 見張りの結果。<日付>.md
 ## モデル方針（このリポジトリでの追加）
 
 - 検索役は Agent ツールで `model: haiku` を指定して起動する。同時起動は最大2本。ツールは読み取りと Web 検索だけ（ファイルを書かせない）
+  - `subagent_type` は書き込みの道具を持たない型（Claude Code なら `Explore`）を選ぶ。そうした型でも Bash は使えることがあるので、頼み方に「ファイルの書き込み・Bash・curl などのダウンロードはしない。使うのは WebSearch・WebFetch・読み取りだけ」と必ず書く。型を選べない環境では、同じ文を頼み方に書く
 - **Sonnet への昇格**: 次の条件のどれかを満たした作業だけ、`model: sonnet` のサブエージェントに任せる。
   1. 同じ抜き書きで `report.py` の照合失敗が2回連続した
   2. 0周目で用語・人・場のいずれかが0件、または報告の半分以上が「探していない」だった
@@ -182,10 +183,10 @@ map.md を下の書式で作り、**問い**と、答えるのに要る**主張*
 - `watch.tsv` が無ければ、`map.md` の「場」と「人」から見張る先の候補を示し、ユーザーの承認を得てから `watch.py add` で足す
 - `watch.tsv` があれば、そのまま `watch.py check` で新着を引く
 
-1. **map.md があるか見る**（話題のフォルダはあるが map.md が無いときの話。フォルダ自体が無いときは上の起動の手順（話題のフォルダが無いとき）で終了する）。`~/research/<話題>/map.md` が無いとき（いきなり「React の新着」と頼まれたとき）は、2つの入り方がある
-   - **急ぐとき（既定）**: 定番の場所をそのまま足して先に見張る。公式のブログ・GitHub の releases、Qiita のタグ、Zenn のトピック、名前の知れた個人ブログ。map.md は問い・場・人だけで作り、あとで書き足す。React の試しでは 0周目の検索役2本に約2分かかり、結果は定番を直接足したのとほぼ同じだった
-   - **場所の見当がつかない分野**: 上の「1. map.md を作る（0周目）」だけ回して場を作ってから見張る
-2. **見張る先を足す**。map.md の「場」と「人」から、新着を出す場所を選んで `~/.claude/skills/imozuru/scripts/watch.py add <topic_dir> <url>` で足す。Qiita のタグ・ユーザー、Zenn のトピック・ユーザー、note のユーザー、Reddit、YouTube のチャンネル、RSS を出しているブログ、arXiv の検索（`http://export.arxiv.org/api/query?search_query=...&sortBy=submittedDate&sortOrder=descending`）が足せる。X と pixiv は RSS を出していないので足せない＝見張れないことを返事に書く
+1. **map.md があるか見る**。ここは、話題のフォルダはあるが map.md が無いときの話。フォルダ自体が無いときは、上の起動の手順どおり終了する。`~/research/<話題>/map.md` が無いとき（いきなり「React の新着」と頼まれたとき）は、2つの入り方がある。**どちらの入り方でも、足す前に見張る先の候補を示し、ユーザーの承認を得てから `watch.py add` する**（このリポジトリでの追加）
+   - **急ぐとき（既定）**: 定番の場所を候補として示し、承認されたものを足して先に見張る。公式のブログ・GitHub の releases、Qiita のタグ、Zenn のトピック、名前の知れた個人ブログ。map.md は問い・場・人だけで作り、あとで書き足す。React の試しでは 0周目の検索役2本に約2分かかり、結果は定番を直接足したのとほぼ同じだった
+   - **場所の見当がつかない分野**: 上の「1. map.md を作る（0周目）」だけ回して場を作り、挙がった場から候補を示して承認を得てから見張る
+2. **見張る先を足す**。map.md の「場」と「人」から、新着を出す場所を候補として示し、ユーザーが承認したものだけを `~/.claude/skills/imozuru/scripts/watch.py add <topic_dir> <url>` で足す。Qiita のタグ・ユーザー、Zenn のトピック・ユーザー、note のユーザー、Reddit、YouTube のチャンネル、RSS を出しているブログ、arXiv の検索（`http://export.arxiv.org/api/query?search_query=...&sortBy=submittedDate&sortOrder=descending`）が足せる。X と pixiv は RSS を出していないので足せない＝見張れないことを返事に書く
    - **RSS があるかは検索役の言葉ではなく `watch.py add` で決める**。検索役は RSS の URL を推測で書き、「無い」と言った react.dev のフィードが実際は取れた。逆に「更新が止まっている」という検索役の言葉は、check の「最新の1件」で確かめる
 3. **新着を引く**。`~/.claude/skills/imozuru/scripts/watch.py check <topic_dir>` で前回から新しいものを出す（初回のフィードは直近14日・`--days` で変える）。結果は `watch/<日付-時刻>.md` に残る（同じ日に何度回しても前の結果は消えない）
    - **新着の無い場所にも、期間に関係なく最新の1件が出る**。公式の大きな出来事が期間より前でも見える
@@ -254,6 +255,7 @@ map.md を下の書式で作り、**問い**と、答えるのに要る**主張*
 - `~/.claude/skills/imozuru/scripts/watch.py add|list|check` — 見張り。RSS / Atom を引いて前回からの新着を出す。検索を使わないので費用はかからず結果も揺れない。DOCTYPE・ENTITY を含むフィードは安全のため読まない
 - `~/.claude/skills/imozuru/scripts/chain.py find|refs|cites|author` — OpenAlex で引用と著者をたどる。1日 1,000 回まで無料の枠で、プリペイド残高が 0 なら超えても止まるだけ。**API キーや支払いの登録はしない**。古めの論文に強く、新しい論文と同名の多い著者に弱い（author は同名の別人の論文を返すことがある）
 - ファイル名は `<著者>-<年>-<短い題>`、arXiv は `arxiv-<番号>-<短い題>`
+- **渡す URL は `http://` か `https://` で始まるものだけ**（このリポジトリでの追加）。`fetch.py` と `watch.py` は、それ以外の URL（`file://`、`-` で始まる文字列、空白や改行を含むものなど）と http/https 以外への転送を `FAIL` にする。検索結果やページの文面を、そのまま URL として渡さない
 
 ## 境界
 

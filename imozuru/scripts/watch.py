@@ -29,6 +29,7 @@ import html
 import json
 import re
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -52,13 +53,25 @@ class _Redirect308(urllib.request.HTTPRedirectHandler):
     http_error_308 = urllib.request.HTTPRedirectHandler.http_error_302
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not safe_url(newurl):
+            raise urllib.error.HTTPError(newurl, code, "http/https 以外への転送はたどらない", headers, fp)
         return super().redirect_request(req, fp, 307 if code == 308 else code, msg, headers, newurl)
 
 
 _OPENER = urllib.request.build_opener(_Redirect308)
 
 
+def safe_url(url: str) -> bool:
+    """http / https の URL だけを通す（claude skills での追加。fetch.py と同じもの）。"""
+    if not url or any(c.isspace() or ord(c) < 0x20 for c in url):
+        return False
+    parts = urllib.parse.urlsplit(url)
+    return parts.scheme in ("http", "https") and bool(parts.netloc)
+
+
 def fetch(url: str) -> tuple[bytes, str]:
+    if not safe_url(url):
+        raise ValueError(f"http/https 以外の URL は取らない: {url!r}")
     req = urllib.request.Request(url, headers=UA)
     with _OPENER.open(req, timeout=60) as res:
         return res.read(5_000_000), res.headers.get("Content-Type", "")

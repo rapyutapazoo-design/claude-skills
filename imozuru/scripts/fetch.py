@@ -22,6 +22,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import urllib.error
 import urllib.parse
 import urllib.request
 from html.parser import HTMLParser
@@ -58,14 +59,30 @@ class _Redirect308(urllib.request.HTTPRedirectHandler):
     http_error_308 = urllib.request.HTTPRedirectHandler.http_error_302
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not safe_url(newurl):
+            raise urllib.error.HTTPError(newurl, code, "http/https 以外への転送はたどらない", headers, fp)
         return super().redirect_request(req, fp, 307 if code == 308 else code, msg, headers, newurl)
 
 
 _OPENER = urllib.request.build_opener(_Redirect308)
 
 
+def safe_url(url: str) -> bool:
+    """http / https の URL だけを通す（claude skills での追加）。
+
+    URL は検索結果やページの文面から選ぶので、file:// で手元のファイルを写したり、
+    `-` で始まる文字列を yt-dlp や ax のオプションとして読ませたりしないようにする。
+    """
+    if not url or any(c.isspace() or ord(c) < 0x20 for c in url):
+        return False
+    parts = urllib.parse.urlsplit(url)
+    return parts.scheme in ("http", "https") and bool(parts.netloc)
+
+
 def download(url: str) -> tuple[bytes, str]:
     """URL を取りに行き、本体と Content-Type を返す。"""
+    if not safe_url(url):
+        raise ValueError(f"http/https 以外の URL は取らない: {url!r}")
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 imozuru"})
     with _OPENER.open(req, timeout=90) as res:
         return res.read(MAX_BYTES), res.headers.get("Content-Type", "")
@@ -304,7 +321,7 @@ def youtube_to_md(url: str, out: Path) -> str:
             ["yt-dlp", "--no-update", "--skip-download", flag, "--encoding", "utf-8",
              "--sub-langs", "ja,en", "--sub-format", "vtt", "--no-simulate",
              "--print", "%(title)s\t%(uploader)s\t%(upload_date)s",
-             "-o", str(tmp / "v.%(ext)s"), url],
+             "-o", str(tmp / "v.%(ext)s"), "--", url],
             capture_output=True, encoding="utf-8", errors="replace")
         if any(tmp.glob("*.vtt")):
             break
@@ -368,6 +385,9 @@ def fetch_source(sources: Path, name: str, url: str, destination: Path) -> int:
     """sources は今回の取得専用の一時置き場。取得・変換・検査中は保存済みの原文に触れない。"""
     if not valid_source_name(name):
         print(f"FAIL\t{name!r}\t原文の名前は単一のファイル名にする")
+        return 1
+    if not safe_url(url):
+        print(f"FAIL\t{name}\thttp/https の URL だけを取る（空白・制御文字も不可）")
         return 1
 
     if X_POST.match(url):
