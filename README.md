@@ -53,6 +53,33 @@ Claude Code用のカスタムスキル集です。スキルはフォルダ単位
 
 ---
 
+### 🍠 [`imozuru/`](./imozuru/)
+
+知らない分野を、引用・リンク・著者を芋づる式にたどって原文まで掘るリサーチスキル。
+
+- 用語・人・場を特定して `map.md` に書き足し、原文を要約せずそのまま保存する（要る主張の全部に原文が付くか飽和したら止める）
+- 検索役は Haiku（最大2本・読み取りと Web 検索のみ）。条件を満たした作業だけ Sonnet へ昇格（最大3回/調査・Opus 不使用・`log.md` に記録）
+- 出力先は `~/research/<話題>/`（`map.md` / `log.md` / `sources/` / `report.html`）
+- 進捗表示: 🍠 芋づるモード | 手順N、✅ 芋づる検索完了、⬆️ Sonnet へ昇格（条件N）
+- 見張りモード: 「芋づる式に検索してください（見張り：<話題>）」で `map.md` の場の新着を RSS で確認（Haiku のみ）
+- 注意: 検索語として問いの中身が外部に出るため、機密・個人データが絡む調べものには使わない
+- 出典: [MaryCache/imozuru](https://github.com/MaryCache/imozuru)（MIT）を元にカスタマイズ
+
+```
+imozuru/
+├── SKILL.md                  # スキル定義・フロー手順
+├── LICENSE                   # MIT（MaryCache）
+├── references/theory.md      # 理論と原文の場所
+├── scripts/                  # fetch.py / chain.py / report.py / watch.py
+└── tests/                    # unittest（fixtures/demo 付き）
+```
+
+**起動トリガー:** 「芋づる式に検索してください」（文字どおり含む場合のみ）、見張りは「芋づる式に検索してください（見張り：<話題>）」
+
+※ 「芋づる式に調査してください」「調べて」「リサーチして」などの言い換えや imozuru への言及・質問・改善依頼では起動しません。
+
+---
+
 ### ⚙️ [`git-workflow/`](./git-workflow/)
 
 コードレビューとコミット・プッシュを一貫して行うスキル。
