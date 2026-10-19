@@ -13,6 +13,8 @@ description: |
 
 # imozuru
 
+本スキルは [MaryCache/imozuru](https://github.com/MaryCache/imozuru)（MIT、コミット 14635fb）をカスタマイズしたもの。出典と変更点は README.md を参照。
+
 知らない分野を、言葉を知らないところから原文にたどりつくまで調べる。
 大事な決まりは2つ。**原文を要約せずに保存する**ことと、**止めどきを確信度ではなく証拠で決める**こと。
 
