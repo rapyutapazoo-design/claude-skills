@@ -87,6 +87,24 @@ plan-creator/
 
 ---
 
+### imozuru
+
+**場所**: `imozuru/`
+
+「芋づる式に検索してください」がユーザーの発話に文字どおり含まれる場合のみ起動するリサーチスキル（言い換え・言及・改善依頼では起動しない）。引用・リンク・著者を芋づる式にたどり、原文を要約せず `~/research/<話題>/` に保存する。検索役は Haiku（最大2本）、条件を満たす作業のみ Sonnet へ昇格（最大3回/調査、Opus 不使用、`log.md` に記録）。「（見張り：<話題>）」付きで watch モード（Haiku のみ）。機密・個人データが絡む調べものには使わない（検索語が外部に出る）。出典: [MaryCache/imozuru](https://github.com/MaryCache/imozuru)（MIT、コミット `14635fb`）をカスタマイズ。詳細は `imozuru/README.md`。
+
+```
+imozuru/
+├── README.md                 # 出典・取り込み範囲・本家からの変更点
+├── SKILL.md                  # スキル定義・フロー手順
+├── LICENSE                   # MIT（MaryCache）
+├── references/theory.md      # 理論と原文の場所
+├── scripts/                  # fetch.py / chain.py / report.py / watch.py
+└── tests/                    # unittest（fixtures/demo 付き）
+```
+
+---
+
 ### git-workflow
 
 **場所**: `git-workflow/`
