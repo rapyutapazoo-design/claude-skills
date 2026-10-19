@@ -257,7 +257,7 @@ map.md を下の書式で作り、**問い**と、答えるのに要る**主張*
 - `~/.claude/skills/imozuru/scripts/watch.py add|list|check` — 見張り。RSS / Atom を引いて前回からの新着を出す。検索を使わないので費用はかからず結果も揺れない。DOCTYPE・ENTITY を含むフィードは安全のため読まない
 - `~/.claude/skills/imozuru/scripts/chain.py find|refs|cites|author` — OpenAlex で引用と著者をたどる。1日 1,000 回まで無料の枠で、プリペイド残高が 0 なら超えても止まるだけ。**API キーや支払いの登録はしない**。古めの論文に強く、新しい論文と同名の多い著者に弱い（author は同名の別人の論文を返すことがある）
 - ファイル名は `<著者>-<年>-<短い題>`、arXiv は `arxiv-<番号>-<短い題>`
-- **渡す URL は `http://` か `https://` で始まるものだけ**（このリポジトリでの追加）。`fetch.py` と `watch.py` は、それ以外の URL（`file://`、`-` で始まる文字列、空白や改行を含むものなど）と http/https 以外への転送を `FAIL` にする。検索結果やページの文面を、そのまま URL として渡さない
+- **渡す URL は `http://` か `https://` で始まるものだけ**（このリポジトリでの追加）。`fetch.py` は、それ以外の URL（`file://`、`-` で始まる文字列、空白や改行を含むものなど）と http/https 以外への転送を `FAIL` で返し、`watch.py` は取得を拒否する（add は「足せなかった」、check はそのフィードを「取れなかった」として飛ばす）。検索結果やページの文面を、そのまま URL として渡さない
 
 ## 境界
 
