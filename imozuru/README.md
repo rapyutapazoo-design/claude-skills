@@ -44,7 +44,8 @@
 - **スクリプトの呼び出しパス**: `~/.claude/skills/imozuru/scripts/` 基準に変更
 - **examples/demo の参照**: `tests/fixtures/demo` に変更
 - **`scripts/fetch.py` / `scripts/watch.py`**: `safe_url()` を追加。渡す URL と転送先を http/https に限定（`file://`、`-` で始まる文字列、空白・改行を含むもの）。`fetch.py` は `FAIL` で拒否。`watch.py` は `ValueError` / `HTTPError` で取得を拒否し、`add` は「足せなかった」と出して終わり、`check` はそのフィードを「取れなかった」と記して飛ばし他のフィードは見る。`yt-dlp` には URL の前に `--` を挟む
-- **tests**: 配置に合わせてパスを調整。`tests/test_url_safety.py` を追加
+- **`scripts/fetch.py` の OCR**: `ocr_langs()` を追加。tesseract に日本語データ（jpn）があれば英語+日本語（`-l eng+jpn`）、無ければ（確認に失敗しても）従来どおり英語だけ（`-l eng`）で動かす。`tests/test_ocr_langs.py` を追加
+- **tests**: 配置に合わせてパスを調整。`tests/test_url_safety.py` と `tests/test_ocr_langs.py` を追加
 
 ## 理論・研究の出典
 
@@ -67,7 +68,7 @@ SKILL.md の各決まりがどの文献のどこから来たかは [`references/
 - **OpenAlex API**: `scripts/chain.py` が引用・著者をたどるために使う（無料枠、API キーや支払いの登録はしない）
 - 任意の外部コマンド（無ければ該当処理が `FAIL` する）:
   - `pdftotext`（PDF の文字取り出し）
-  - `pdftoppm` と `tesseract`（文字の層が無い PDF の OCR）
+  - `pdftoppm` と `tesseract`（文字の層が無い PDF の OCR。日本語の OCR には tesseract の日本語データ（jpn。Homebrew なら `brew install tesseract-lang`）が要る。無ければ英語だけ読む）
   - `yt-dlp`（YouTube の字幕）
   - `ax`（https://github.com/yusukebe/ax ・HTML の本文取り出し。無ければ標準ライブラリで代替）
 
