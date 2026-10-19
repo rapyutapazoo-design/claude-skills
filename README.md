@@ -64,7 +64,7 @@ Claude Code用のカスタムスキル集です。スキルはフォルダ単位
 - 見張りモード: 「芋づる式に検索してください（見張り：<話題>）」で `map.md` の場の新着を RSS で確認（Haiku のみ）
 - 注意: 検索語として問いの中身が外部に出るため、機密・個人データが絡む調べものには使わない
 - 出典: [MaryCache/imozuru](https://github.com/MaryCache/imozuru)（MIT・コミット `14635fb`）を元にカスタマイズ。出典と変更点の詳細は [`imozuru/README.md`](./imozuru/README.md)
-- 本家からのスクリプトの変更: `fetch.py` / `watch.py` は http/https 以外の URL と転送を拒否し、`yt-dlp` には URL の前に `--` を挟む（`tests/test_url_safety.py` を追加）
+- 本家からのスクリプトの変更: `fetch.py` / `watch.py` は http/https 以外の URL と転送を拒否し、`yt-dlp` には URL の前に `--` を挟む（`tests/test_url_safety.py` を追加）。`fetch.py` の OCR は tesseract に jpn があれば英語+日本語、無ければ英語だけ（`tests/test_ocr_langs.py` を追加）
 - **配置は必ず `~/.claude/skills/imozuru/`**（SKILL.md がスクリプトをこのパスで呼ぶため、プロジェクト単位では配置できません）
 
 ```

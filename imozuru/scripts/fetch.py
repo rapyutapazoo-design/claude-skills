@@ -145,11 +145,33 @@ def pdf_to_text(pdf: Path) -> str:
     return out.read_text(encoding="utf-8", errors="replace") if out.exists() else ""
 
 
+_OCR_LANGS: str | None = None
+
+
+def ocr_langs() -> str:
+    """OCR の言語指定を返す。tesseract に jpn があれば "eng+jpn"、無ければ（取れなくても）"eng"。
+
+    claude skills での追加。結果はモジュール内に覚えておく。
+    """
+    global _OCR_LANGS
+    if _OCR_LANGS is None:
+        _OCR_LANGS = "eng"
+        try:
+            res = subprocess.run(["tesseract", "--list-langs"], capture_output=True,
+                                 encoding="utf-8", errors="replace", timeout=30)
+            if res.returncode == 0 and "jpn" in res.stdout.split():
+                _OCR_LANGS = "eng+jpn"
+        except (OSError, subprocess.SubprocessError):
+            pass
+    return _OCR_LANGS
+
+
 def ocr_pdf(pdf: Path) -> str:
     """文字の層が無い PDF（紙を読み取った画像だけの古い論文）を、手元の tesseract で文字にする。
 
     Spencer ら 1995 の PDF は取れたのに pdftotext が1文字しか返さなかった（2026-10-10）。
-    英語だけ（入っている言語データが eng のみ）。1ページずつ 200dpi の画像にして読む。
+    言語は英語。日本語データ（jpn）が入っていれば日本語も読む（claude skills での追加）。
+    1ページずつ 200dpi の画像にして読む。
     OCR の誤りは残るので、.txt の先頭に OCR だと書いて、読む人が原本と照らせるようにする。
     pdftoppm か tesseract が無ければ何もせず空を返す（呼び手が FAIL に無いコマンドを書く）。
     """
@@ -160,8 +182,9 @@ def ocr_pdf(pdf: Path) -> str:
     subprocess.run(["pdftoppm", "-r", "200", "-png", str(pdf), str(tmp / "p")],
                    check=False, stderr=subprocess.DEVNULL)
     pages = []
+    langs = ocr_langs()  # claude skills での追加（本家は "eng" 固定）
     for img in sorted(tmp.glob("p-*.png")):
-        res = subprocess.run(["tesseract", str(img), "-", "-l", "eng"],
+        res = subprocess.run(["tesseract", str(img), "-", "-l", langs],
                              capture_output=True, encoding="utf-8", errors="replace")
         pages.append(f"=== page {img.stem.split('-')[-1]} ===\n{res.stdout}")
         img.unlink()
